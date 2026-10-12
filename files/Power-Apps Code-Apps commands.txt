@@ -1,0 +1,42 @@
+Power-Apps Code-Apps:
+Commands
+
+1. Template command:
+npx degit gitHub:microsoft/PowerAppsCodeApps/templates/vite  <your project folder name>
+
+2. Install dependencies:
+npm install
+
+use this right after second step.
+npm install -g @microsoft/power-apps-cli
+
+3. Initializing code app:
+npx power-apps init
+
+it will ask the environment id.  
+	
+	power apps --> settings --> session details 
+
+you will find the environment ID there.
+
+Then provide the display name for the app.
+
+3.1 Command to add data source(dataverse tables)
+
+npx power-apps add-data-source
+
+api id --> dataverse (enter "dataverse" as it is)
+resource name --> logical name of table
+organisation url --> instance url in the session details
+
+4.Build the project
+npm run build
+
+5. run the app
+npm run dev
+
+6. list all commands
+npx power-apps
+
+7. push:
+npx power-apps push

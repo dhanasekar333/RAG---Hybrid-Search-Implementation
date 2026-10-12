@@ -1,0 +1,43 @@
+https://make.powerautomate.com/environments/a5a54cc6-b21b-e837-b28e-c55d7a3b0507/flows/5e363b83-4578-4b38-bc06-84be14a07810/runs/08584162826875370352930548286CU13
+
+concat('https://make.powerautomate.com/environments/',outputs('Extract_workflow_info')?['tags']?['environmentName'],'/flows/',outputs('Extract_workflow_info')['name'],'/runs/',outputs('Extract_workflow_info')['run']['name'])
+
+
+
+
+
+https://make.powerautomate.com/environments/a5a54cc6-b21b-e837-b28e-c55d7a3b0507/flows/5e363b83-4578-4b38-bc06-84be14a07810/runs/08584155873605027867336662998CU11
+
+
+
+
+
+
+{
+    "id": "/subscriptions/a5a54cc6-b21b-e837-b28e-c55d7a3b0507/resourceGroups/selfhostingresourcegroup/providers/Microsoft.Logic/workflows/5e363b83-4578-4b38-bc06-84be14a07810",
+    "name": "5e363b83-4578-4b38-bc06-84be14a07810",
+    "type": "Microsoft.Logic/workflows",
+    "location": "westus",
+    "tags": {
+        "flowDisplayName": "Excel Data Uploader (Dhanasekar)",
+        "licenseContextConfigName": "CONTEXT_USER-0FD2019482494B628384F779671EFFF7_POWERAUTOMATE_PREMIUM40K",
+        "environmentName": "a5a54cc6-b21b-e837-b28e-c55d7a3b0507",
+        "logicAppName": "5e363b83-4578-4b38-bc06-84be14a07810",
+        "environmentFlowSuspensionReason": "a5a54cc6:2Db21b:2De837:2Db28e:2Dc55d7a3b0507-None",
+        "creationSource": "Portal",
+        "modifiedSources": "Portal",
+        "state": "Enabled",
+        "createdTime": "7/29/2026 6:17:27 AM",
+        "lastModifiedTime": "8/6/2026 12:31:05 PM",
+        "createdBy": "0fd20194-8249-4b62-8384-f779671efff7",
+        "triggerType": "Automated",
+        "createdByUserId": "447C7D6E188041F582461E634B328172-A5A54CC6B21BE837B28EC55D7A3B0507-ENV"
+    },
+    "run": {
+        "id": "/subscriptions/a5a54cc6-b21b-e837-b28e-c55d7a3b0507/resourceGroups/selfhostingresourcegroup/providers/Microsoft.Logic/workflows/5e363b83-4578-4b38-bc06-84be14a07810/runs/08584155873605027867336662998CU11",
+        "name": "08584155873605027867336662998CU11",
+        "type": "Microsoft.Logic/workflows/runs"
+    }
+}
+
+

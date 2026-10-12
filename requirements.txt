@@ -1,0 +1,16 @@
+langchain 
+langchain-core 
+langchain-community 
+langchain-text-splitters
+pypdf
+langchain-openai
+openai
+python-dotenv
+docx2txt 
+langchain-postgres
+psycopg[binary]
+pgvector
+fastapi
+uvicorn[standard]
+python-multipart    
+pydantic-settings

@@ -1,0 +1,171 @@
+Powerfx functions:
+
+VALUE FUNCTIONS:
+ValueExample --> Variable we set
+
+1. Value("Numbered Text") --> e.g. --> Set(valueExample, Value("$9.99"))
+
+2. Value("Text", "Country Code") --> e.g. --> Set(ValueExampleCountry, Value("10.000", "de-DE")
+
+-------------------------------------------------------------------------------
+
+CONTAIN FUNCTION: (will use in operator)
+Text Search:
+If("Joe" in LabelName.Text, true, false)
+
+Data Search:
+Filter(NameTable, "Joe" in Name) Name --> column Name 
+
+-------------------------------------------------------------------------------
+
+TEXT FUNCTION:
+
+Now() --> gives date and time of the runtime. (present date and time)
+--> Set(valueExample, Text(Now()))
+
+Text(Number or Date/Time)
+
+	e.g.. --> Set(valueExample, Text("9.99"))
+
+-------------------------------------------------------------------------------
+IF FUNCTION:
+
+True Only:						
+if(Slider1.Value = 10, "ResultTrue")	
+
+True & False Values:
+if(Slider1.Value = 10, "ResultTrue", "ResultFalse")
+
+Multiple condition with true and false values:
+if(Slider1.Value = 10 And Slider2.Value = 20, "ResultTrue", "ResultFalse")
+
+Nested IF Statements:	
+if(Slider1.Value = 10, "ResultTrue", if(Slider2.Value = 20, "Result20True", "Result20False"))
+
+-------------------------------------------------------------------------------
+SPLIT FUNCTION:
+Examples:
+
+1. Split("Joe","Jax","Meg",",")
+2. Split("Joe@flowjoe.io","@")
+-------------------------------------------------------------------------------
+
+CONCATENATE FUNCTION:
+
+Adding static strings:
+
+Concatenate("Jax"," ","Joe")
+
+Using in data table:
+
+ClearCollect(
+	NameTable,
+	Table(
+	    {
+		Name: "FlowJoe"
+	    },
+	    {
+		Name: "Jax"
+	    },
+	    {
+		Name: "Meg"
+	    }
+	)
+)
+
+This will create a data table.
+
+Function --> Concatenate(NameDataTable.Selected.Name, " ", "Selected")
+
+this function will display the output of the name u selected 
+Eg. if u selected the Meg it will display as Meg Selected.
+
+Build Email address using concatenate function:
+Concatenate("FlowJoe","@","flowjoe.io")
+output --> FlowJoe@flowjoe.io
+
+-------------------------------------------------------------------------------
+STRING CONCATENATION:
+
+---> FirstNameInput.Text & " " & LastNameInput.Text
+
+ADDITION:
+Eg:  Topic.DailySales + Topic.WeeklySales
+
+SUBRACTION:
+Topic.TotalBudget - Topic.Expenses
+
+Selector:
+. --> is used as selector. Example: Topic.Name,
+'Name' is the variable. 'Topic' is a built-in system object/namespace, in copilot studio
+
+MULTIPLICATION:
+Topic.DailySales * Topic.Days
+
+Exponentiation:
+Topic.DailySales ^ 2 
+
+Another Example: (Value(PrincipalInput.Text) * (1+Value(RateInput.Text)) ^ 3
+
+-------------------------------------------------------------------------------
+
+TRIM FUNCTION:
+
+Example:
+Trim( " Flow    Joe ") ---> Flow Joe
+
+TRIMENDS:
+removes spaces at the start and end alone.
+Example --> TrimEnds(" Flow    Joe ")
+
+-------------------------------------------------------------------------------
+COLORVALUE:
+
+Example --> ColorValue("#a52a2a") or ColorValue("Red") or Color.Red
+
+NOT EQUAL TO:
+Represented by <>
+
+Eg --> NumberInput1.Text <> NumberInput2.Text
+
+UPPER:
+Upper("Flow Joe")
+
+LOWER:
+Lower("Flow Joe")
+
+AND OPERATOR:
+!IsBlank(NameInput.Text) && !IsBlank(EmailInput.Text)
+
+OR OPERATOR:
+!IsBlank(NameInput.Text) || !IsBlank(EmailInput.Text)
+-------------------------------------------------------------------------------
+TODAY FUNCTION:
+Today() --> shows current Date. to display time also use Now() function.
+
+ISTODAY FUNCTION:
+IsToday(date) --> returns true or false
+
+MONTH FUNCTION:
+Month(Now())
+
+YEAR FUNCTION:
+Year(Now())
+
+DAY FUNCTION:
+Day(Now())
+
+PROPER FUNCTION:
+Used for proper capitalizing.
+Example:
+Proper("flow joe") --> Flow Joe
+
+-------------------------------------------------------------------------------
+
+
+
+
+
+
+ 
+
