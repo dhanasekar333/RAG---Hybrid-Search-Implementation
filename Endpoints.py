@@ -23,6 +23,7 @@ class Source(BaseModel):
     filename: str
     page: Optional[int] = None
     score: float
+    found_by: Optional[str] = None
     preview: str
 
 

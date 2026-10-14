@@ -2,6 +2,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import os
+import re
 import psycopg
 import pandas as pd
 from itertools import islice
@@ -34,6 +35,19 @@ SUPPORTED = (".pdf", ".txt", ".docx", ".csv")
 FILE_TYPES = ["pdf", "docx", "txt", "csv"]
 PROSE_TYPES = ["pdf", "docx", "txt"]
 
+RRF_K = 60          # standard constant for Reciprocal Rank Fusion, leave as is
+CANDIDATES = 10     # how many results each search returns before merging
+
+# Words that appear in many chunks and do not help find a specific one.
+# Edit this list for your own data.
+IGNORE_WORDS = {"list", "show", "give", "tell", "find", "provide", "name", "names",
+                "title", "titles", "genre", "genres", "belong", "belongs",
+                "please", "could", "would", "should", "me",
+                "return", "returns", "details", "detail", "get", "display", "fetch",
+                "all", "every", "each", "information", "info", "about",
+                "records", "record", "rows", "row", "entries", "data",
+                "related", "matching"}
+
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
@@ -43,6 +57,19 @@ vectorstore = PGVector(
     connection=DATABASE_URL,
     use_jsonb=True,
 )
+
+def create_keyword_index():
+    """One-time (safe to repeat): makes the word search fast."""
+    plain_url = DATABASE_URL.replace("postgresql+psycopg", "postgresql")
+    with psycopg.connect(plain_url) as conn:
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS chunks_keyword_idx
+            ON langchain_pg_embedding
+            USING GIN (to_tsvector('english', document))
+        """)
+
+
+create_keyword_index()
 
 splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150)
 
@@ -168,6 +195,60 @@ context = {context}"""),
 # ------------------------------------------------------------------
 store = {}   # {session_id: [HumanMessage, AIMessage, ...]}
 
+def keyword_search(query, file_type=None):
+    # keep only useful words; every one of them must appear in the chunk
+    words = [w for w in re.findall(r"[A-Za-z0-9]+", query) if w.lower() not in IGNORE_WORDS]
+    if not words:
+        return []
+    and_query = " & ".join(words)
+
+    plain_url = DATABASE_URL.replace("postgresql+psycopg", "postgresql")
+    with psycopg.connect(plain_url) as conn:
+        rows = conn.execute(
+            """
+            SELECT e.id, e.document, e.cmetadata
+            FROM langchain_pg_embedding e
+            JOIN langchain_pg_collection c ON c.uuid = e.collection_id
+            WHERE c.name = %(collection)s
+              AND to_tsvector('english', e.document) @@ to_tsquery('english', %(q)s)
+              AND (%(ftype)s::text IS NULL OR e.cmetadata->>'file_type' = %(ftype)s::text)
+            ORDER BY ts_rank(to_tsvector('english', e.document), to_tsquery('english', %(q)s)) DESC
+            LIMIT %(limit)s
+            """,
+            {"collection": COLLECTION_NAME, "q": and_query,
+             "ftype": file_type, "limit": CANDIDATES},
+        ).fetchall()
+        print("keyword query:", and_query, "| hits:", len(rows))
+
+    return [Document(id=str(row[0]), page_content=row[1], metadata=row[2]) for row in rows]
+
+
+def hybrid_search(query, file_type=None):
+    file_filter = {"file_type": {"$eq": file_type}} if file_type else None
+
+    # list 1: search by meaning (weak matches are dropped BEFORE merging)
+    vector_found = vectorstore.similarity_search_with_score(
+        query, k=CANDIDATES, filter=file_filter)
+    print("vector distances:", [round(float(score), 3) for doc, score in vector_found])
+    vector_docs = [doc for doc, score in vector_found if score <= SCORE_LIMIT]
+
+    # list 2: search by words
+    keyword_docs = keyword_search(query, file_type)
+
+    # Reciprocal Rank Fusion: each list gives a chunk 1/(60 + rank) points
+    points = {}      # chunk id -> total points
+    docs = {}        # chunk id -> the chunk
+    found_by = {}    # chunk id -> which searches found it
+
+    for method, ranked_docs in (("meaning", vector_docs), ("words", keyword_docs)):
+        for rank, doc in enumerate(ranked_docs, start=1):
+            points[doc.id] = points.get(doc.id, 0) + 1 / (RRF_K + rank)
+            docs[doc.id] = doc
+            found_by.setdefault(doc.id, []).append(method)
+
+    best_ids = sorted(points, key=points.get, reverse=True)[:TOP_K]
+    return [(docs[i], points[i], found_by[i]) for i in best_ids]
+
 
 # ------------------------------------------------------------------
 # ASK
@@ -202,26 +283,23 @@ def ask(session_id, user_name, question):
         if recent:
             search_question = rewrite_chain.invoke({"input": question, "chat_history": recent}).strip()
 
-        file_filter = {"file_type": {"$eq": route}} if route in FILE_TYPES else None
-
-        found = vectorstore.similarity_search_with_score(
-            search_question, k=TOP_K, filter=file_filter
-        )
-        results = [(doc, score) for doc, score in found if score <= SCORE_LIMIT]
+        file_type = route if route in FILE_TYPES else None
+        results = hybrid_search(search_question, file_type)
 
         if not results:
             answer = "I couldn't find anything relevant in the documents."
         else:
-            context = "\n\n".join(doc.page_content for doc, score in results)
+            context = "\n\n".join(doc.page_content for doc, points, how in results)
             answer = rag_chain.invoke({
                 "input": question, "chat_history": recent, "context": context
             })
-            for doc, score in results:
+            for doc, points, how in results:
                 page = doc.metadata.get("page")
                 sources.append({
                     "filename": doc.metadata.get("filename", "unknown"),
-                    "page": page + 1 if page is not None else None,   # PDF pages start at 0
-                    "score": round(float(score), 4),
+                    "page": page + 1 if page is not None else None,
+                    "score": round(points, 4),
+                    "found_by": " + ".join(how),
                     "preview": doc.page_content[:200],
                 })
 
